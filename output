@@ -1,0 +1,38 @@
+(base) Colins-MacBook-Pro:TicTacToe cloghin$ python  -u tictactoe.py
+
+Play TicTacToe. Choose a play option. H-Human, C-Computer: HH/HC/CH/CC/Q-quit
+>>>CH
+- - -
+- - -
+- - -
+Board after X move
+- - X
+- - -
+- - -
+Player O turn. Enter XY position: (ie 11 in top left 33 in bottom right):22
+Board after O move
+- - X
+- O -
+- - -
+Board after X move
+- - X
+- O -
+- X -
+Player O turn. Enter XY position: (ie 11 in top left 33 in bottom right):11
+Board after O move
+O - X
+- O -
+- X -
+Board after X move
+O - X
+X O -
+- X -
+Player O turn. Enter XY position: (ie 11 in top left 33 in bottom right):33
+Board after O move
+O - X
+X O -
+- X O
+Winner is: O
+
+Play TicTacToe. Choose a play option. H-Human, C-Computer: HH/HC/CH/CC/Q-quit
+>>>
