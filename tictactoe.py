@@ -148,7 +148,7 @@ def evaluate(board):
 # Main function to start the game
 def play_game(human):
     # create board and show it
-    #board = np.full((3, 3), EMPTY)
+    board = np.full((3, 3), EMPTY)
     # board = np.array([['-', '-', '-'], ['-', '-', '-'], ['-', '-', '-']])
     show(board)
     global AI
