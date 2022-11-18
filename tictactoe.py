@@ -14,8 +14,12 @@ AI = ''
 
 
 def show(board):
-    # remove [ ] and '
-    print(str(board).replace(' [', '').replace('[', '').replace(']', '').replace("'",''))
+    # show, A,B,C for column, 1,2,3 for rows, remove [ ] and '
+    colindex = np.array(['A', 'B', 'C'])
+    rowindex = np.array([' ', '1', '2', '3']).reshape(4, 1)
+    b1 = np.vstack((colindex, board))
+    b2 = np.hstack((rowindex, b1))
+    print(str(b2).replace(' [', '').replace('[', '').replace(']', '').replace("'",''))
 
 
 # Check for empty places on board
@@ -24,7 +28,6 @@ def possibilities(board):
 
     for i in range(len(board)):
         for j in range(len(board)):
-
             if board[i][j] == EMPTY:
                 results.append((i, j))
     return results
@@ -45,8 +48,8 @@ def smart_place(board, player):
 
     for current_move in possibilities(board):
         board[current_move] = player # set move
-        current_score = minimax(board, 0, True)
-        # test print(current_move, current_score)
+        current_score = minimax(board, 0, False)
+        # print(current_move, current_score)
         if current_score > best_score:
             best_move = current_move
             best_score = current_score
@@ -89,12 +92,21 @@ def minimax(board, depth, isMaximize):
 
 
 def user_place(board, player):
-    val = input(f'Player {player} turn. Enter XY position: (ie 11 in top left 33 in bottom right):')
+    val = input(f'Player {player} turn: ')
     if val.upper() == 'Q':
-        print('Aborting game ....')
-        sys.exit(1)
-    position = tuple([int(i) - 1 for i in [*val]])
+        abort()
 
+    if len(val) != 2:
+        print("Position not correct. Try again.")
+        user_place(board, player)
+
+    col, row = list(val)
+    col = col.upper()
+    if col not in ['A', 'B', 'C'] or row not in ['1','2','3']:
+        print("Position not correct. Try again.")
+        user_place(board, player)
+
+    position = (ord(row)-49, ord(col) - 65)
     if position in possibilities(board):
         board[position] = player
     else:
@@ -136,8 +148,8 @@ def evaluate(board):
 # Main function to start the game
 def play_game(human):
     # create board and show it
-    board = np.full((3, 3), EMPTY)
-    # test board board = np.array([['O', '-', 'X'], ['X', '-', '-'], ['X', 'O', 'O']])
+    #board = np.full((3, 3), EMPTY)
+    # board = np.array([['-', '-', '-'], ['-', '-', '-'], ['-', '-', '-']])
     show(board)
     global AI
     AI = ''.join(PLAYERS).replace(human, '')
@@ -164,12 +176,21 @@ def play_game(human):
             # the only other option is -1 , which continues playing
 
 
+def abort():
+    print('Aborting game ....')
+    sys.exit(1)
+
+
 if __name__ == "__main__":
     while True:
         option = input("""
-Play TicTacToe. Pick your mark: X or O, Q aborts game
+Play TicTacToe 
+Pick X or O
+Q aborts game
 >>>""")
-        if option.upper() not in ['X', 'O']:
+        if option.upper() not in ['X', 'O', 'Q']:
             print(f'Incorrect input:{option}. Retry\n')
         else:
+            if option.upper() == 'Q':
+                abort()
             print(str(play_game(option.upper())))
