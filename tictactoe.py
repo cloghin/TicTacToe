@@ -1,10 +1,16 @@
+import sys
+
 import numpy as np
 import random
 from time import sleep
-import sys
+
+
+# used https://www.neverstopbuilding.com/blog/minimax for minimax refresher and inspiration
+# very well explained
 
 PLAYERS = ['X', 'O']
 EMPTY = '-'
+AI = ''
 
 
 def show(board):
@@ -25,40 +31,75 @@ def possibilities(board):
 
 
 # Select a random place for the player
-def random_place(board, player):
+def stupid_place(board, player):
     selection = possibilities(board)
     current_loc = random.choice(selection)
     board[current_loc] = player
     return board
 
 
-# implement
-def minimax(board, depth, isMaximizingPlayer):
-    if len(possibilities(board)) == 0:
-        pass
-
-
+# evaluate all options and pick the highest score
 def smart_place(board, player):
-    # TBD implement minimax algorithm
-    best = None
-    # evaluate all option, give score and pick best
-    for current in possibilities(board):
-        if current > best:
-            best = current
+    best_move = (None, None) # initialize best move
+    best_score = -1000  # initialize best score
 
-    board[best] = player
+    for current_move in possibilities(board):
+        board[current_move] = player # set move
+        current_score = minimax(board, 0, True)
+        # test print(current_move, current_score)
+        if current_score > best_score:
+            best_move = current_move
+            best_score = current_score
+        board[current_move] = EMPTY # reset move
+
+    board[best_move] = player
     return board
 
 
-def request_place(board, player):
+# recursively call minimax for all subtree options to compute score
+def minimax(board, depth, isMaximize):
+    # print(f'{board}, player {player}, depth {depth}, is Maximize {isMaximize}')
+    state = evaluate(board)
+    if state == AI:
+        # i win, i get 10 points and subtract points for needing more moves to win
+        return 10 - depth
+
+    opponent = ''.join(PLAYERS).replace(AI, '')
+    if state == opponent:
+        # i lose, -10 points for me and add points for needing more moves to lose (slow death)
+        return depth - 10
+
+    # draw no points
+    if state == 'DRAW':
+        return 0
+
+    scores = []
+    for current_move in possibilities(board):
+        if isMaximize:
+            board[current_move] = opponent  # move
+        else:
+            board[current_move] = AI
+        scores.append(minimax(board, depth+1, not isMaximize))
+        board[current_move] = EMPTY  # reset
+
+    if isMaximize:
+        return max(scores)
+    else:
+        return min(scores)
+
+
+def user_place(board, player):
     val = input(f'Player {player} turn. Enter XY position: (ie 11 in top left 33 in bottom right):')
+    if val.upper() == 'Q':
+        print('Aborting game ....')
+        sys.exit(1)
     position = tuple([int(i) - 1 for i in [*val]])
 
     if position in possibilities(board):
         board[position] = player
     else:
         print("Position not correct. Try again.")
-        request_place(board, player)
+        user_place(board, player)
     return board
 
 
@@ -81,55 +122,54 @@ def wins(board, player):
 
 # Evaluates whether there is a winner or a tie
 def evaluate(board):
-    winner = 0
-
+    # check for win
     for player in PLAYERS:
         if wins(board, player):
-            winner = player
+            return player
 
-    if np.all(board != EMPTY) and winner == 0:
-        winner = -1
-    return winner
+    if np.all(board != EMPTY):
+        return 'DRAW' # check for draw
+    else:
+        return 'CONTINUE'  # game must continue
 
 
 # Main function to start the game
-def play_game(gameconfig):
-
+def play_game(human):
     # create board and show it
     board = np.full((3, 3), EMPTY)
+    # test board board = np.array([['O', '-', 'X'], ['X', '-', '-'], ['X', 'O', 'O']])
     show(board)
+    global AI
+    AI = ''.join(PLAYERS).replace(human, '')
 
-    winner = 0
-    while winner == 0:
-        for i, player in enumerate(PLAYERS):
-            if gameconfig[i] == 'C':
-                # computer plays, replace with smart_place
-                board = random_place(board, player)
-            else:  # human, request coordinate input
-                board = request_place(board, player)
-            print(f"Board after {player} move")
+    while True:
+        for player in PLAYERS:
+            if player == human:
+                # human, request coordinate input
+                board = user_place(board, player)
+            else:
+                # computer plays, replace use smart_place
+                # board = stupid_place(board, player)
+                board = smart_place(board, player)
+
+            print(f"\t\t\t{player} moves")
             show(board)
             sleep(0.5)
 
-            winner = evaluate(board)
-            if winner != 0:
-                break
-    return winner
+            result = evaluate(board)
+            if result in PLAYERS:
+                return f'Winner is: {result}'
+            if result == 'DRAW':
+                return 'No one won'
+            # the only other option is -1 , which continues playing
 
 
 if __name__ == "__main__":
     while True:
         option = input("""
-Play TicTacToe. Choose a play option. H-Human, C-Computer: HH/HC/CH/CC/Q-quit
+Play TicTacToe. Pick your mark: X or O, Q aborts game
 >>>""")
-        if option.upper() == 'Q':
-            sys.exit()
+        if option.upper() not in ['X', 'O']:
+            print(f'Incorrect input:{option}. Retry\n')
         else:
-            if len(option) != 2:
-                print(f'Incorrect input:{option}. Retry\n')
-            else:
-
-                if option.upper() not in ['HH','HC','CH','CC']:
-                    print(f'Incorrect input:{option}. Retry\n')
-                else:
-                    print("Winner is: " + str(play_game([*option.upper()])))
+            print(str(play_game(option.upper())))
